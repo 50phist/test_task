@@ -1,1 +1,2 @@
 D:\Atrey\Cosmix\test\x64\Debug\test.exe
+D:\Atrey\Cosmix\test_task\x64\Debug\test.exe
