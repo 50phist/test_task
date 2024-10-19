@@ -7,7 +7,7 @@ std::vector<double> SU(std::vector<double> qref, std::vector<double> x)
 	/* Вектор-функция правой части системы ОДУ работы СУ */
 
 	double Jr = 5e-4, Hmax = 0.2, Mmax = 5e-3; 
-	double ki = 100, kp = 10;
+	double ki = 5, kp = 16;
 
 	std::vector <double> w, H, q, qerr;
 	std::vector<double> dHdt;
@@ -17,16 +17,23 @@ std::vector<double> SU(std::vector<double> qref, std::vector<double> x)
 	q = { x[6], x[7], x[8], x[9] };
 	H *= Jr;
 	
-	// qerr = qref - q;
-	qerr = quatProduct(qref, quatConjugate(q));
+	qerr = qref - q; // qerr = quatProduct(qref, quatConjugate(q));
 	qerr.erase(qerr.begin());
-	dHdt = ki * qerr + kp * w;
+	dHdt = - ki * qerr + kp * w;
 
 	for (size_t i = 0; i < dHdt.size(); i++)
 	{
-		if ((abs(H[i]) <= Hmax) && (abs(dHdt[i]) <= Mmax))
+		if ((H[i] >= Hmax) && (dHdt[i] > 0))
 		{
 			dHdt[i] = 0;
+		}
+		else if ((H[i] <= -Hmax) && (dHdt[i] < 0))
+		{
+			dHdt[i] = 0;
+		}
+		else if (abs(dHdt[i]) > Mmax)
+		{
+			dHdt[i] = Mmax * dHdt[i] / abs(dHdt[i]);
 		}
 	}
 	
@@ -115,15 +122,16 @@ int main()
 	std::vector <double> qref = { 0.85355,  -0.14644,  0.35355,  0.35355 }; // {Rz = 45, Ry = 45, Rz = 0}
 	// Вектор состояния:     { wx, wy, wz, wxr, wyr, wzr, q0, q1, q2, q3 }
 	std::vector <double> x = { 0,  0,  0,  0,   0,	 0,	  1,  0,  0,  0 }, dHdt;
-	double t = 0, ht = 1e-3, hrec = 1e-1;
+	double t = 0, ht = 1e-3, hrec = 1;
 	int rec = (int)(hrec / ht);
 
-	while (t < 20)
+	while (true)
 	{
 		dHdt = SU(qref, x);
 		if (rec == (int)(hrec / ht))
 		{
-			std::cout << "t =\t" << t << ";\tdHdt =\t" << dHdt[0] << "\t" << dHdt[1] << "\t" << dHdt[2] << ";\tq =\t" << x[6] << "\t" << x[7] << "\t" << x[8] << "\t" << x[9] << ";" << std::endl;
+			if (abs(qref[0] - x[6]) < 1e-4 && abs(qref[1] - x[7]) < 1e-4 && abs(qref[2] - x[8]) < 1e-4 && abs(qref[3] - x[9]) < 1e-4){ break; }
+			std::cout << "t = " << t << ";\tdHdt = " << dHdt[0] << "\t" << dHdt[1] << "\t" << dHdt[2] << ";\tq = " << x[6] << "\t" << x[7] << "\t" << x[8] << "\t" << x[9] << ";" << std::endl;
 			std::cout << std::endl;
 			rec = 0;
 		}
