@@ -7,7 +7,7 @@ std::vector<double> SU(std::vector<double> qref, std::vector<double> x)
 	/* Вектор-функция правой части системы ОДУ работы СУ */
 
 	double Jr = 5e-4, Hmax = 0.2, Mmax = 5e-3; 
-	double ki = 5, kp = 16;
+	double k1 = 5, k2 = 16;
 
 	std::vector <double> w, H, q, qerr;
 	std::vector<double> dHdt;
@@ -17,9 +17,9 @@ std::vector<double> SU(std::vector<double> qref, std::vector<double> x)
 	q = { x[6], x[7], x[8], x[9] };
 	H *= Jr;
 	
-	qerr = qref - q; // qerr = quatProduct(qref, quatConjugate(q));
+	qerr = quatProduct(qref, q);
 	qerr.erase(qerr.begin());
-	dHdt = - ki * qerr + kp * w;
+	dHdt = -k1 * qerr + k2 * w;
 
 	for (size_t i = 0; i < dHdt.size(); i++)
 	{
@@ -119,7 +119,7 @@ std::vector<double> GetSolver(std::vector<double> (*KA)(std::vector<double>(*SU)
 int main()
 {
 	// Целевая ориентация:      { q0, q1, q2, q2 }
-	std::vector <double> qref = { 0.85355,  -0.14644,  0.35355,  0.35355 }; // {Rz = 45, Ry = 45, Rz = 0}
+	std::vector <double> qref = { -0.07004,  -0.39190,  0.07004,  -0.9147 };
 	// Вектор состояния:     { wx, wy, wz, wxr, wyr, wzr, q0, q1, q2, q3 }
 	std::vector <double> x = { 0,  0,  0,  0,   0,	 0,	  1,  0,  0,  0 }, dHdt;
 	double t = 0, ht = 1e-3, hrec = 1;
@@ -132,6 +132,7 @@ int main()
 		{
 			if (abs(qref[0] - x[6]) < 1e-4 && abs(qref[1] - x[7]) < 1e-4 && abs(qref[2] - x[8]) < 1e-4 && abs(qref[3] - x[9]) < 1e-4){ break; }
 			std::cout << "t = " << t << ";\tdHdt = " << dHdt[0] << "\t" << dHdt[1] << "\t" << dHdt[2] << ";\tq = " << x[6] << "\t" << x[7] << "\t" << x[8] << "\t" << x[9] << ";" << std::endl;
+			std::cout << "w = " << x[0] << "\t" << x[1] << "\t" << x[2] << ";\twr = " << x[3] << "\t" << x[4] << "\t" << x[5] << ";" << std::endl;
 			std::cout << std::endl;
 			rec = 0;
 		}
